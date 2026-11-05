@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+**/vendor/
+**/node_modules/
+**/.git/
+*.log
+*.zip
+*.sqlite
+*.sqlite-*
+/auth.json
+**/auth.json
+/.well-known/
+/cgi-bin/
