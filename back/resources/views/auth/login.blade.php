@@ -362,6 +362,7 @@
                 </div>
 
                 <h2>Connexion</h2>
+                <p><a href="{{ route('seller.register') }}">Créer mon compte vendeur</a></p>
                 <p class="subtitle">Renseignez votre adresse mail et votre mot de passe.</p>
 
                 @if ($errors->any())

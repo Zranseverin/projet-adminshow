@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'storefront_url' => env('FRONTEND_URL', 'https://show-lib.severinzran.ci'),
 
     /*
     |--------------------------------------------------------------------------

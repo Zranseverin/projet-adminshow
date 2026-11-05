@@ -6,6 +6,12 @@
     </div>
 
     <nav class="sb-nav">
+        @if(auth()->user()?->account_type === 'admin')
+        <div class="sb-section">Marketplace</div>
+        <a class="sb-item" href="{{ route('marketplace.products.index') }}">Produits et validations</a>
+        <a class="sb-item" href="{{ route('marketplace.sellers') }}">Vendeurs</a>
+        <a class="sb-item" href="{{ route('marketplace.orders') }}">Commandes marketplace</a>
+        <a class="sb-item" href="{{ route('marketplace.settings') }}">Paramètres marketplace</a>
         <div class="sb-section">Principal</div>
         <a class="sb-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -21,7 +27,7 @@
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
             </svg>
-            Catalogue livres
+            Archives livres
             <span class="sb-badge-count">{{ \Illuminate\Support\Facades\Schema::hasTable('books') ? \App\Models\Book::count() : 0 }}</span>
         </a>
         <a class="sb-item {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" href="{{ route('admin.orders.index') }}">
@@ -95,6 +101,11 @@
             </svg>
             Parametres
         </a>
+        @else
+        <a class="sb-item" href="{{ route('seller.products.index') }}">Mes produits</a>
+        <a class="sb-item" href="{{ route('seller.orders') }}">Mes commandes</a>
+        <a class="sb-item" href="{{ route('seller.shop') }}">Ma boutique</a>
+        @endif
     </nav>
 
     <div class="sb-footer">

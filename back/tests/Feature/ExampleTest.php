@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -18,7 +18,9 @@ class ExampleTest extends TestCase
 
     public function test_authenticated_user_can_access_dashboard(): void
     {
-        $this->actingAs(new User())
+        $user = new User;
+        $user->account_type = 'admin';
+        $this->actingAs($user)
             ->get('/dashboard')
             ->assertOk();
     }
