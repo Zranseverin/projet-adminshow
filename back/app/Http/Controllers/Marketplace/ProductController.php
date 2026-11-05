@@ -31,6 +31,7 @@ class ProductController extends Controller
     {
         $products = Product::with(['seller', 'category'])
             ->when(! $this->admin($request), fn ($q) => $q->where('seller_id', $request->user()->seller->id))
+            ->when($this->admin($request) && $request->filled('seller_id'), fn ($q) => $q->where('seller_id', $request->input('seller_id')))
             ->when($request->input('q'), fn ($q, $search) => $q->where('name', 'like', '%'.$search.'%'))
             ->when($request->input('status'), fn ($q, $status) => $q->where('status', $status))
             ->latest()->paginate(20)->withQueryString();
@@ -96,7 +97,12 @@ class ProductController extends Controller
                 $attributes[trim($key)] = trim($data['attribute_values'][$i]);
             }
         }
-        $product->fill(collect($data)->only(['name', 'description', 'category_id', 'brand', 'sku', 'stock'])->all());
+        // Existing quantities are adjusted through the locked inventory ledger.
+        $fields = ['name', 'description', 'category_id', 'brand', 'sku'];
+        if (! $product->exists) {
+            $fields[] = 'stock';
+        }
+        $product->fill(collect($data)->only($fields)->all());
         $product->seller_id = $sellerId;
         $product->price_minor = (int) round((float) $data['price'] * 100);
         $product->old_price_minor = isset($data['old_price']) ? (int) round((float) $data['old_price'] * 100) : null;

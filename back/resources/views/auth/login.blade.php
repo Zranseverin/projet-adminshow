@@ -325,6 +325,7 @@
             .form-row { align-items: flex-start; flex-direction: column; }
         }
     </style>
+<link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=1">
 </head>
 <body>
     <main class="login-shell">

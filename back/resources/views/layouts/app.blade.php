@@ -464,11 +464,13 @@
         }
     </style>
     @stack('styles')
+<link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=1">
 </head>
 <body>
     @include('partials.sidebar')
 
     <main class="main">
+        @include('marketplace.mobile-admin-navigation', ['legacy' => true])
         @include('partials.header')
 
         <div class="content">

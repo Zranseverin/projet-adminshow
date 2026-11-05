@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    public function orderItems()
+    {
+        return $this->hasMany(MarketOrderItem::class);
+    }
     protected $guarded = ['id'];
 
     protected function casts(): array

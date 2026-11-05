@@ -8,6 +8,7 @@
     <nav class="sb-nav">
         @if(auth()->user()?->account_type === 'admin')
         <div class="sb-section">Marketplace</div>
+        <a class="sb-item" href="{{ route('marketplace.advertisements.index') }}">Publicités du catalogue</a>
         <a class="sb-item" href="{{ route('marketplace.products.index') }}">Produits et validations</a>
         <a class="sb-item" href="{{ route('marketplace.sellers') }}">Vendeurs</a>
         <a class="sb-item" href="{{ route('marketplace.orders') }}">Commandes marketplace</a>
@@ -104,6 +105,7 @@
         @else
         <a class="sb-item" href="{{ route('seller.products.index') }}">Mes produits</a>
         <a class="sb-item" href="{{ route('seller.orders') }}">Mes commandes</a>
+        <a class="sb-item" href="{{ route('seller.inventory') }}">Mon stock</a>
         <a class="sb-item" href="{{ route('seller.shop') }}">Ma boutique</a>
         @endif
     </nav>

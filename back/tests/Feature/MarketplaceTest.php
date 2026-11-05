@@ -16,6 +16,19 @@ class MarketplaceTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['services.marketplace.checkout_key' => 'checkout-test-key']);
+        $this->withHeaders(['X-Marketplace-Key' => 'checkout-test-key', 'X-Customer-Id' => '1']);
+    }
+
+    public function test_checkout_rejects_requests_without_authenticated_frontend_customer(): void
+    {
+        $this->withHeaders(['X-Marketplace-Key' => '', 'X-Customer-Id' => ''])->postJson('/api/marketplace/orders', [])->assertUnauthorized();
+        $this->assertDatabaseCount('market_orders', 0);
+    }
+
     private function seller(): Seller
     {
         $user = User::factory()->create();
@@ -55,6 +68,24 @@ class MarketplaceTest extends TestCase
         $this->get('/admin/books')->assertForbidden();
         $this->get('/marketplace/settings')->assertForbidden();
         $this->get('/dashboard')->assertForbidden();
+    }
+
+    public function test_catalog_category_counts_sorting_and_promotions_use_visible_products(): void
+    {
+        $category = \App\Models\Category::create(['name' => 'Accessoires', 'slug' => 'accessoires-test', 'is_active' => true]);
+        $cheap = $this->product();
+        $cheap->update(['category_id' => $category->id, 'price_minor' => 50000, 'old_price_minor' => 70000]);
+        $expensive = $this->product();
+        $expensive->update(['category_id' => $category->id]);
+        $hidden = $this->product(null, 'pending');
+        $hidden->update(['category_id' => $category->id]);
+        $this->getJson('/api/marketplace/products?sort=price_asc&categories[]='.$category->id)
+            ->assertOk()->assertJsonCount(2, 'data')->assertJsonPath('data.0.id', $cheap->id);
+        $this->getJson('/api/marketplace/products?sort=price_desc')->assertOk()->assertJsonPath('data.0.id', $expensive->id);
+        $this->getJson('/api/marketplace/products?sale=1')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $cheap->id);
+        $categories = collect($this->getJson('/api/marketplace/options')->assertOk()->json('data.categories'));
+        $this->assertSame(2, $categories->firstWhere('id', $category->id)['products_count']);
+        $this->getJson('/api/marketplace/products?sort=popular')->assertOk();
     }
 
     public function test_migration_preserves_books_and_imports_them_to_the_general_catalog(): void
@@ -163,6 +194,8 @@ class MarketplaceTest extends TestCase
         $order = SellerOrder::firstOrFail();
         $this->actingAs($seller->user)->put(route('seller.orders.update', $order), ['action' => 'cancel'])->assertRedirect();
         $this->assertSame(10, $product->fresh()->stock);
+        $this->assertDatabaseHas('product_stock_movements', ['product_id' => $product->id, 'seller_id' => $seller->id, 'quantity' => -2, 'type' => 'sale', 'stock_before' => 10, 'stock_after' => 8]);
+        $this->assertDatabaseHas('product_stock_movements', ['product_id' => $product->id, 'seller_id' => $seller->id, 'quantity' => 2, 'type' => 'cancellation', 'stock_before' => 8, 'stock_after' => 10]);
         $this->put(route('seller.orders.update', $order), ['action' => 'cancel'])->assertUnprocessable();
         $this->assertSame(10, $product->fresh()->stock);
     }
@@ -190,8 +223,83 @@ class MarketplaceTest extends TestCase
         $this->put(route('marketplace.products.update', $product), ['name' => 'Sac validé', 'price' => 12500, 'stock' => 10, 'status' => 'published'])->assertRedirect();
         $this->getJson('/api/marketplace/products/'.$product->id)->assertOk()->assertJsonPath('data.name', 'Sac validé');
         $this->actingAs($seller->user);
-        foreach (['/vendeur/products', '/vendeur/products/create', '/vendeur/products/'.$product->id.'/edit', '/vendeur/boutique', '/vendeur/commandes'] as $url) {
-            $this->get($url)->assertOk();
+        foreach (['/vendeur/tableau-de-bord', '/vendeur/products', '/vendeur/products/create', '/vendeur/products/'.$product->id.'/edit', '/vendeur/boutique', '/vendeur/commandes', '/vendeur/stock'] as $url) {
+            $this->get($url)->assertOk()->assertSee('class="dash-sidebar"', false)->assertSee('aria-current="page"', false);
         }
+    }
+
+    public function test_inventory_is_private_and_adjustments_are_logged_without_negative_stock(): void
+    {
+        $seller = $this->seller(); $other = $this->seller();
+        $own = $this->product($seller); $foreign = $this->product($other);
+        $own->update(['name' => 'Produit prive Alice']);
+        $foreign->update(['name' => 'Produit prive Bob']);
+        $this->actingAs($seller->user)->get(route('seller.inventory', ['seller_id' => $other->id]))
+            ->assertOk()->assertSee('Produit prive Alice')->assertDontSee('Produit prive Bob');
+        $this->put(route('seller.inventory.update', $foreign), ['type' => 'entry', 'quantity' => 4, 'reason' => 'Intrusion'])->assertNotFound();
+        $this->put(route('seller.inventory.update', $own), ['type' => 'entry', 'quantity' => 5, 'reason' => 'Reapprovisionnement'])->assertRedirect();
+        $this->assertSame(15, $own->fresh()->stock);
+        $this->assertDatabaseHas('product_stock_movements', ['product_id' => $own->id, 'seller_id' => $seller->id, 'quantity' => 5, 'stock_before' => 10, 'stock_after' => 15]);
+        $this->put(route('seller.inventory.update', $own), ['type' => 'exit', 'quantity' => 16, 'reason' => 'Trop de sorties'])->assertUnprocessable();
+        $this->assertSame(15, $own->fresh()->stock);
+        $this->assertDatabaseCount('product_stock_movements', 1);
+        $this->put(route('seller.products.update', $own), ['name' => 'Produit prive Alice', 'price' => 12500, 'stock' => 900, 'status' => 'draft'])->assertRedirect();
+        $this->assertSame(15, $own->fresh()->stock);
+        $this->actingAs($other->user)->get(route('seller.inventory'))->assertOk()->assertDontSee('Reapprovisionnement');
+        $this->actingAs($this->admin())->get(route('marketplace.inventory', ['seller_id' => $seller->id]))->assertOk()->assertSee('Produit prive Alice')->assertDontSee('Produit prive Bob');
+    }
+
+    public function test_static_dashboard_shows_demo_content_and_preserves_shop_access(): void
+    {
+        $seller = $this->seller(); $other = $this->seller();
+        $foreign = $this->product($other);
+        $foreign->update(['name' => 'Produit secret autre boutique']);
+        $this->actingAs($seller->user)->get(route('seller.dashboard'))->assertOk()
+            ->assertSee('demo-badge', false)->assertSee('1 573 620')
+            ->assertSee('Sac week-end')->assertSee('Revenus cumul')
+            ->assertDontSee('Produit secret autre boutique');
+        $this->get(route('marketplace.sellers.dashboard', $other))->assertForbidden();
+        $this->actingAs($this->admin())->get(route('marketplace.sellers.dashboard', $seller))->assertOk()
+            ->assertSee($seller->name)->assertSee('demo-badge', false);
+    }
+
+    public function test_advertising_is_admin_only_and_active_announcements_are_published_in_order(): void
+    {
+        $seller = $this->seller();
+        $this->actingAs($seller->user)->get('/marketplace/advertisements')->assertForbidden();
+        $this->post('/marketplace/advertisements', ['title' => 'Intrusion'])->assertForbidden();
+        $this->actingAs($this->admin());
+        $this->get('/marketplace/advertisements')->assertOk();
+        $this->get('/marketplace/advertisements/create')->assertOk();
+        $this->post('/marketplace/advertisements', ['title' => 'Annonce B', 'image_url' => 'https://example.com/banner.png',
+            'button_url' => 'https://example.com/offer', 'sort_order' => 20, 'is_active' => 1])->assertRedirect();
+        $ad = \App\Models\Advertisement::where('title', 'Annonce B')->firstOrFail();
+        $this->get(route('marketplace.advertisements.edit', $ad))->assertOk();
+        $this->put(route('marketplace.advertisements.update', $ad), ['title' => 'Annonce A', 'sort_order' => 1, 'is_active' => 1])->assertRedirect();
+        $this->assertSame('https://example.com/banner.png', $ad->fresh()->image_url);
+        $this->getJson('/api/marketplace/options')->assertOk()->assertJsonPath('data.advertisements.0.title', 'Annonce A');
+        $this->put(route('marketplace.advertisements.update', $ad), ['title' => 'Annonce A', 'sort_order' => 1, 'is_active' => 0])->assertRedirect();
+        $this->getJson('/api/marketplace/options')->assertJsonCount(0, 'data.advertisements');
+        $this->actingAs($seller->user)->delete(route('marketplace.advertisements.destroy', $ad))->assertForbidden();
+        $this->actingAs($this->admin())->delete(route('marketplace.advertisements.destroy', $ad))->assertRedirect();
+        $this->assertDatabaseMissing('advertisements', ['id' => $ad->id]);
+    }
+
+    public function test_advertisement_upload_replacement_and_deletion_manage_files(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $this->actingAs($this->admin());
+        $this->post('/marketplace/advertisements', ['title' => 'Image annonce', 'sort_order' => 0, 'is_active' => 1,
+            'image' => \Illuminate\Http\UploadedFile::fake()->image('banner.png')])->assertRedirect();
+        $ad = \App\Models\Advertisement::where('title', 'Image annonce')->firstOrFail();
+        $oldImage = $ad->image_url;
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($oldImage);
+        $this->getJson('/api/marketplace/options')->assertJsonPath('data.advertisements.0.image_url', route('media.show', ['path' => $oldImage]));
+        $this->put(route('marketplace.advertisements.update', $ad), ['title' => 'Image modifiee', 'sort_order' => 0, 'is_active' => 1,
+            'image' => \Illuminate\Http\UploadedFile::fake()->image('replacement.png')])->assertRedirect();
+        \Illuminate\Support\Facades\Storage::disk('public')->assertMissing($oldImage);
+        $newImage = $ad->fresh()->image_url;
+        $this->delete(route('marketplace.advertisements.destroy', $ad))->assertRedirect();
+        \Illuminate\Support\Facades\Storage::disk('public')->assertMissing($newImage);
     }
 }

@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Category extends Model
 {
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
     protected $fillable = [
         'name',
         'slug',

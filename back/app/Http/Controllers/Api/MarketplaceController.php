@@ -27,12 +27,19 @@ class MarketplaceController extends Controller
     public function index(Request $request)
     {
         $data = $request->validate(['q' => 'nullable|string|max:200', 'category' => 'nullable|integer',
+            'categories' => 'nullable|array|max:50', 'categories.*' => 'integer|min:1',
+            'sort' => 'nullable|in:newest,popular,price_asc,price_desc', 'sale' => 'nullable|boolean',
             'seller' => 'nullable|string|max:200', 'page' => 'nullable|integer|min:1']);
         $products = Product::visible()->with(['category', 'seller'])
             ->when($data['q'] ?? null, fn ($q, $search) => $q->where('name', 'like', '%'.$search.'%'))
             ->when($data['category'] ?? null, fn ($q, $id) => $q->where('category_id', $id))
+            ->when($data['categories'] ?? [], fn ($q, $ids) => $q->whereIn('category_id', $ids))
+            ->when($request->boolean('sale'), fn ($q) => $q->whereColumn('old_price_minor', '>', 'price_minor'))
             ->when($data['seller'] ?? null, fn ($q, $slug) => $q->whereHas('seller', fn ($s) => $s->where('slug', $slug)))
-            ->latest()->paginate(24);
+            ->when(($data['sort'] ?? '') === 'popular', fn ($q) => $q->withSum(['orderItems as sold_quantity' => fn ($items) => $items->whereHas('sellerOrder', fn ($orders) => $orders->where('payment_status', 'paid')->where('status', '!=', 'cancelled'))], 'quantity')->orderByDesc('sold_quantity'))
+            ->when(($data['sort'] ?? '') === 'price_asc', fn ($q) => $q->orderBy('price_minor'))
+            ->when(($data['sort'] ?? '') === 'price_desc', fn ($q) => $q->orderByDesc('price_minor'))
+            ->latest('products.id')->paginate(24);
 
         return response()->json(['data' => $products->map(fn ($p) => $this->serializeProduct($p)),
             'meta' => ['current_page' => $products->currentPage(), 'last_page' => $products->lastPage(), 'total' => $products->total()]]);
@@ -48,9 +55,14 @@ class MarketplaceController extends Controller
     public function options()
     {
         $settings = MarketplaceSetting::current();
+        $advertisements = \App\Models\Advertisement::whereRaw("placement LIKE ? ESCAPE '!'", ['marketplace!_catalog!_%'])->where('is_active', true)
+            ->whereNotNull('image_url')->orderBy('sort_order')->orderBy('id')->get()
+            ->map(fn ($advertisement) => ['id' => $advertisement->id, 'title' => $advertisement->title,
+                'image_url' => $advertisement->public_image_url, 'button_url' => $advertisement->button_url]);
 
-        return response()->json(['data' => ['categories' => Category::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+        return response()->json(['data' => ['categories' => Category::where('is_active', true)->select(['id', 'name'])->withCount(['products' => fn ($q) => $q->visible()])->orderBy('name')->get(),
             'payment_modes' => array_values(array_filter([$settings->platform_payment ? 'platform' : null, $settings->direct_payment ? 'direct' : null])),
+            'advertisements' => $advertisements,
             'seller_url' => route('seller.register'), 'login_url' => route('login')]]);
     }
 
@@ -99,7 +111,7 @@ class MarketplaceController extends Controller
                     $part->items()->create(['product_id' => $line['product']->id, 'name' => $line['product']->name,
                         'quantity' => $line['quantity'], 'unit_price_minor' => $line['product']->price_minor,
                         'total_minor' => $line['product']->price_minor * $line['quantity']]);
-                    $line['product']->decrement('stock', $line['quantity']);
+                    \App\Support\ProductStock::change($line['product'], -$line['quantity'], 'sale', 'Commande '.$order->reference);
                 }
                 $total += $subtotal;
             }

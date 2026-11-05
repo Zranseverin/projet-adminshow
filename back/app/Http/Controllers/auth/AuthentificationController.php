@@ -26,7 +26,7 @@ class AuthentificationController extends Controller
             $request->session()->regenerate();
 
             if (Auth::user()->account_type === 'seller') {
-                return redirect()->route('seller.products.index');
+                return redirect()->route('seller.dashboard');
             }
 
             return redirect()->intended(route('marketplace.products.index'));

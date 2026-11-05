@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/media', PublicMediaController::class)->name('media.show');
 
-Route::get('/', fn () => redirect(auth()->user()?->account_type === 'seller' ? route('seller.products.index') : route('marketplace.products.index')));
+Route::get('/', fn () => redirect(auth()->user()?->account_type === 'seller' ? route('seller.dashboard') : route('marketplace.products.index')));
 
 Route::get('/dashboard', DashboardController::class)->middleware(['auth', MarketplaceAdmin::class])->name('dashboard');
 
@@ -52,6 +52,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/devenir-vendeur', [SellerRegistrationController::class, 'store'])->middleware('throttle:5,1')->name('seller.register.store');
 });
 Route::middleware(['auth', MarketplaceAdmin::class])->prefix('marketplace')->name('marketplace.')->group(function () {
+    Route::resource('advertisements', \App\Http\Controllers\Marketplace\AdvertisingController::class)->except('show');
+    Route::get('/sellers/{seller}/tableau-de-bord', [\App\Http\Controllers\Marketplace\SellerDashboardController::class, 'showForAdmin'])->name('sellers.dashboard');
+    Route::get('/stock', [\App\Http\Controllers\Marketplace\InventoryController::class, 'index'])->name('inventory');
+    Route::put('/stock/{product}', [\App\Http\Controllers\Marketplace\InventoryController::class, 'update'])->name('inventory.update');
     Route::resource('products', ProductController::class)->except(['show', 'destroy']);
     Route::get('/settings', [ManagementController::class, 'settings'])->name('settings');
     Route::put('/settings', [ManagementController::class, 'updateSettings'])->name('settings.update');
@@ -61,6 +65,9 @@ Route::middleware(['auth', MarketplaceAdmin::class])->prefix('marketplace')->nam
     Route::put('/orders/{sellerOrder}', [ManagementController::class, 'updateOrder'])->name('orders.update');
 });
 Route::middleware(['auth', MarketplaceSeller::class])->prefix('vendeur')->name('seller.')->group(function () {
+    Route::get('/tableau-de-bord', \App\Http\Controllers\Marketplace\SellerDashboardController::class)->name('dashboard');
+    Route::get('/stock', [\App\Http\Controllers\Marketplace\InventoryController::class, 'index'])->name('inventory');
+    Route::put('/stock/{product}', [\App\Http\Controllers\Marketplace\InventoryController::class, 'update'])->name('inventory.update');
     Route::resource('products', ProductController::class)->except(['show', 'destroy']);
     Route::get('/boutique', [ManagementController::class, 'shop'])->name('shop');
     Route::put('/boutique', [ManagementController::class, 'updateShop'])->name('shop.update');

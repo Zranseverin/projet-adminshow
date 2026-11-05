@@ -61,6 +61,7 @@ class ManagementController extends Controller
     public function orders(Request $request)
     {
         $orders = SellerOrder::with(['marketOrder', 'items'])
+            ->when($request->user()->account_type === 'admin' && $request->filled('seller_id'), fn ($q) => $q->where('seller_id', $request->input('seller_id')))
             ->when($request->user()->account_type !== 'admin', fn ($q) => $q->where('seller_id', $request->user()->seller->id))
             ->latest()->paginate(15);
 
@@ -73,7 +74,7 @@ class ManagementController extends Controller
         abort_unless($admin || $sellerOrder->seller_id === $request->user()->seller->id, 404);
         $data = $request->validate(['action' => 'required|in:status,payment,payout,cancel', 'status' => 'nullable|in:pending,processing,shipped,delivered',
             'reference' => 'nullable|string|max:255']);
-        DB::transaction(function () use ($data, $sellerOrder, $admin) {
+        DB::transaction(function () use ($data, $sellerOrder, $admin, $request) {
             $order = SellerOrder::with('marketOrder')->lockForUpdate()->findOrFail($sellerOrder->id);
             abort_if($order->status === 'cancelled', 422, 'Cette commande est annulée.');
             if ($data['action'] === 'status') {
@@ -90,7 +91,8 @@ class ManagementController extends Controller
                 abort_unless($order->payment_status === 'pending' && in_array($order->status, ['pending', 'processing'], true), 422, 'Seule une commande non payée et non expédiée peut être annulée.');
                 foreach ($order->items()->orderBy('product_id')->get() as $item) {
                     if ($item->product_id) {
-                        Product::whereKey($item->product_id)->increment('stock', $item->quantity);
+                        $product = Product::whereKey($item->product_id)->lockForUpdate()->firstOrFail();
+                        \App\Support\ProductStock::change($product, $item->quantity, 'cancellation', 'Annulation '.$order->marketOrder->reference, $request->user()->id);
                     }
                 }
                 $order->update(['status' => 'cancelled']);

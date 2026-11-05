@@ -26,5 +26,5 @@ Route::prefix('marketplace')->group(function () {
     Route::get('/products', [MarketplaceController::class, 'index']);
     Route::get('/products/{product}', [MarketplaceController::class, 'show']);
     Route::get('/options', [MarketplaceController::class, 'options']);
-    Route::post('/orders', [MarketplaceController::class, 'checkout'])->middleware('throttle:10,1');
+    Route::post('/orders', [MarketplaceController::class, 'checkout'])->middleware([\App\Http\Middleware\AuthenticatedCustomerCheckout::class, 'throttle:10,1']);
 });
