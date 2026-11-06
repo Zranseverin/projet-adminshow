@@ -7,6 +7,15 @@
 
     <nav class="sb-nav">
         @if(auth()->user()?->account_type === 'admin')
+        <a class="sb-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            Tableau de bord
+        </a>
         <div class="sb-section">Marketplace</div>
         @foreach([
             ['route' => 'marketplace.inventory', 'match' => 'marketplace.inventory*', 'label' => 'Stocks', 'icon' => 'M3 7l9-4 9 4-9 4-9-4 M3 7v10l9 4 9-4V7 M12 11v10'],
@@ -22,15 +31,7 @@
         </a>
         @endforeach
         <div class="sb-section">Principal</div>
-        <a class="sb-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"/>
-                <rect x="14" y="3" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/>
-            </svg>
-            Tableau de bord
-        </a>
+
         <a class="sb-item {{ request()->routeIs('admin.books.*') ? 'active' : '' }}" href="{{ route('admin.books.index') }}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
