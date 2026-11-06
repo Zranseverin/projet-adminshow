@@ -19,7 +19,13 @@ class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVer
     }
     public function seller()
     {
+        if ($this->member_seller_id) return $this->belongsTo(Seller::class, 'member_seller_id');
         return $this->hasOne(Seller::class);
+    }
+
+    public function ownsSeller(): bool
+    {
+        return $this->account_type === 'seller' && ! $this->member_seller_id && $this->seller?->user_id === $this->id;
     }
 
     /** @use HasFactory<UserFactory> */
@@ -53,6 +59,7 @@ class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVer
     {
         return [
             'email_verified_at' => 'datetime',
+            'member_is_active' => 'boolean',
             'password' => 'hashed',
         ];
     }

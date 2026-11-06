@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="fr">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ $seller->name }} · Zran Market</title><link rel="icon" href="{{ asset('zran-market.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ asset('css/seller-dashboard.css') }}?v=1"><link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=1">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ $seller->name }} · Zran Market</title><link rel="icon" href="{{ asset('zran-market.svg') }}" type="image/svg+xml"><link rel="stylesheet" href="{{ asset('css/seller-dashboard.css') }}?v=3"><link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=1">
 </head>
 <body>
 @php

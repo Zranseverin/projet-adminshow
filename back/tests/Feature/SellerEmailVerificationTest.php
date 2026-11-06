@@ -55,5 +55,12 @@ class SellerEmailVerificationTest extends TestCase
         $this->assertStringContainsString('/email/verify/'.$user->id.'/', $message->actionUrl);
         $this->assertStringContainsString('signature=', $message->actionUrl);
         $this->assertSame('Valider mon adresse e-mail', $message->actionText);
+        $html = view($message->view['html'], $message->viewData)->render();
+        $this->assertStringContainsString('Votre boutique', $html);
+        $this->assertStringContainsString(e($message->actionUrl), $html);
+        $this->assertStringNotContainsString('Laravel', $html);
+        $this->assertStringNotContainsString("If you're having trouble", $html);
+        $text = view($message->view['text'], $message->viewData)->render();
+        $this->assertStringContainsString('Valider mon adresse e-mail', $text);
     }
 }

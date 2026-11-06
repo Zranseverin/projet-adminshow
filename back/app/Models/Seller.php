@@ -23,6 +23,11 @@ class Seller extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function members()
+    {
+        return $this->hasMany(User::class, 'member_seller_id');
+    }
+
     public function orders()
     {
         return $this->hasMany(SellerOrder::class);

@@ -70,6 +70,11 @@ Route::middleware(['auth', MarketplaceAdmin::class])->prefix('marketplace')->nam
     Route::put('/orders/{sellerOrder}', [ManagementController::class, 'updateOrder'])->name('orders.update');
 });
 Route::middleware(['auth', MarketplaceSeller::class])->prefix('vendeur')->name('seller.')->group(function () {
+    Route::get('/configuration-mail', [\App\Http\Controllers\MailConfigurationController::class, 'sellerEdit'])->name('mail-settings.edit');
+    Route::put('/configuration-mail', [\App\Http\Controllers\MailConfigurationController::class, 'sellerUpdate'])->name('mail-settings.update');
+    Route::get('/membres', [\App\Http\Controllers\Marketplace\SellerMemberController::class, 'index'])->name('members.index');
+    Route::post('/membres', [\App\Http\Controllers\Marketplace\SellerMemberController::class, 'store'])->middleware('throttle:10,1')->name('members.store');
+    Route::put('/membres/{member}', [\App\Http\Controllers\Marketplace\SellerMemberController::class, 'update'])->name('members.update');
     Route::get('/tableau-de-bord', \App\Http\Controllers\Marketplace\SellerDashboardController::class)->name('dashboard');
     Route::get('/stock', [\App\Http\Controllers\Marketplace\InventoryController::class, 'index'])->name('inventory');
     Route::put('/stock/{product}', [\App\Http\Controllers\Marketplace\InventoryController::class, 'update'])->name('inventory.update');

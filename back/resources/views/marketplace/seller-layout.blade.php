@@ -13,7 +13,7 @@
         @media(max-width:760px){.grid{grid-template-columns:1fr}.card{padding:20px}header{padding:16px 20px}h1{font-size:26px}nav{font-size:13px}main{padding-top:24px}.heading .btn{width:100%}}
     </style>
 @if($usesSellerShell)
-<link rel="stylesheet" href="{{ asset('css/seller-dashboard.css') }}?v=2">
+<link rel="stylesheet" href="{{ asset('css/seller-dashboard.css') }}?v=3">
 <link rel="stylesheet" href="{{ asset('css/seller-shell.css') }}?v=1">
 @endif
 <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=1">
@@ -52,4 +52,5 @@
     @yield('content')
 </main>
 @if($usesSellerShell)</div>@endif
+@stack('scripts')
 </body></html>

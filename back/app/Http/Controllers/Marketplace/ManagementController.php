@@ -47,11 +47,13 @@ class ManagementController extends Controller
 
     public function shop(Request $request)
     {
+        abort_unless($request->user()->ownsSeller(), 403);
         return view('marketplace.shop', ['seller' => $request->user()->seller]);
     }
 
     public function updateShop(Request $request)
     {
+        abort_unless($request->user()->ownsSeller(), 403);
         $request->user()->seller->update($request->validate(['name' => 'required|string|max:160', 'phone' => 'required|string|max:40',
             'description' => 'nullable|string|max:4000', 'payment_instructions' => 'nullable|string|max:4000']));
 

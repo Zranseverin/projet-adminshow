@@ -8,7 +8,7 @@
 <div class="mail-page">
     <div class="mail-heading"><span class="mail-eyebrow">Administration / Configuration</span><h1>Configuration mail</h1><p>Une adresse d’expédition pour accueillir vos vendeurs et valider leur compte.</p></div>
     @if(session('success'))<div class="mail-message" role="status">{{ session('success') }}</div>@endif
-    @if($errors->any())<div class="mail-message mail-error" role="alert"><strong>Vérifiez les informations suivantes.</strong><ul>@foreach($errors->messages() as $field => $messages)@foreach($messages as $error)<li><a href="#{{ $field }}">{{ $error }}</a></li>@endforeach@endforeach</ul></div>@endif
+    @if($errors->any())<div class="mail-message mail-error" role="alert"><strong>Vérifiez les informations suivantes.</strong><ul>@foreach($errors->messages() as $field => $messages)@foreach($messages as $error)<li><a href="#{{ $field }}">{{ $error }}</a></li>@endforeach @endforeach</ul></div>@endif
     <form method="post" action="{{ route('admin.mail-settings.update') }}">
         @csrf @method('put')
         <div class="mail-layout"><div class="mail-sections">
