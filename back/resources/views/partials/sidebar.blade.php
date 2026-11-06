@@ -8,11 +8,19 @@
     <nav class="sb-nav">
         @if(auth()->user()?->account_type === 'admin')
         <div class="sb-section">Marketplace</div>
-        <a class="sb-item" href="{{ route('marketplace.advertisements.index') }}">Publicités du catalogue</a>
-        <a class="sb-item" href="{{ route('marketplace.products.index') }}">Produits et validations</a>
-        <a class="sb-item" href="{{ route('marketplace.sellers') }}">Vendeurs</a>
-        <a class="sb-item" href="{{ route('marketplace.orders') }}">Commandes marketplace</a>
-        <a class="sb-item" href="{{ route('marketplace.settings') }}">Paramètres marketplace</a>
+        @foreach([
+            ['route' => 'marketplace.inventory', 'match' => 'marketplace.inventory*', 'label' => 'Stocks', 'icon' => 'M3 7l9-4 9 4-9 4-9-4 M3 7v10l9 4 9-4V7 M12 11v10'],
+            ['route' => 'marketplace.advertisements.index', 'match' => 'marketplace.advertisements.*', 'label' => 'Publicités', 'icon' => 'M3 10v4h4l12 5V5L7 10H3 M7 14l2 7h4l-2-5 M21 9v6'],
+            ['route' => 'marketplace.products.index', 'match' => 'marketplace.products.*', 'label' => 'Produits', 'icon' => 'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z'],
+            ['route' => 'marketplace.sellers', 'match' => 'marketplace.sellers*', 'label' => 'Vendeurs', 'icon' => 'M3 21v-2a5 5 0 0 1 10 0v2 M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M16 4a4 4 0 0 1 0 8 M16 15a5 5 0 0 1 5 5v1'],
+            ['route' => 'marketplace.orders', 'match' => 'marketplace.orders*', 'label' => 'Commandes', 'icon' => 'M3 6h18v15H3z M3 6l3-4h12l3 4 M8 10a4 4 0 0 0 8 0'],
+            ['route' => 'marketplace.settings', 'match' => 'marketplace.settings*', 'label' => 'Paramètres', 'icon' => 'M4 7h16 M4 17h16 M8 4v6 M16 14v6'],
+        ] as $item)
+        <a class="sb-item {{ request()->routeIs($item['match']) ? 'active' : '' }}" href="{{ route($item['route']) }}" @if(request()->routeIs($item['match'])) aria-current="page" @endif>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ $item['icon'] }}"/></svg>
+            {{ $item['label'] }}
+        </a>
+        @endforeach
         <div class="sb-section">Principal</div>
         <a class="sb-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
