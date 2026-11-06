@@ -218,7 +218,10 @@ class MarketplaceTest extends TestCase
         $product = $this->product($seller, 'pending');
         $this->actingAs($this->admin());
         foreach (['/marketplace/products', '/marketplace/products/create', '/marketplace/products/'.$product->id.'/edit', '/marketplace/settings', '/marketplace/sellers', '/marketplace/orders'] as $url) {
-            $this->get($url)->assertOk();
+            $this->get($url)->assertOk()
+                ->assertSee('class="sidebar"', false)
+                ->assertSee('class="topbar"', false)
+                ->assertDontSee('class="management-header"', false);
         }
         $this->put(route('marketplace.products.update', $product), ['name' => 'Sac validé', 'price' => 12500, 'stock' => 10, 'status' => 'published'])->assertRedirect();
         $this->getJson('/api/marketplace/products/'.$product->id)->assertOk()->assertJsonPath('data.name', 'Sac validé');

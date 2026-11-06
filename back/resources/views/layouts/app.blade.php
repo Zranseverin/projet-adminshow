@@ -473,7 +473,8 @@
         @include('marketplace.mobile-admin-navigation', ['legacy' => true])
         @include('partials.header')
 
-        <div class="content">
+        <div class="content @yield('content-class')">
+            @yield('before-content')
             @yield('content')
         </div>
     </main>

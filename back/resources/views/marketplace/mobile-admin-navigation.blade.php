@@ -9,7 +9,7 @@
             <a href="{{ route('marketplace.inventory') }}">Stocks</a>
             <a href="{{ route('marketplace.advertisements.index') }}">Publicités</a>
             <a href="{{ route('marketplace.settings') }}">Paramètres</a>
-            <a href="{{ route('dashboard') }}">Ancien backoffice</a>
+            <a href="{{ route('dashboard') }}">Tableau de bord</a>
             @endif
             <a href="{{ route('profile.show') }}">Mon profil</a>
             <form method="post" action="{{ route('logout') }}">@csrf<button class="secondary" style="width:100%">Déconnexion</button></form>
