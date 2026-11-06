@@ -11,6 +11,7 @@ class MarketplaceSeller
     {
         abort_unless($request->user()?->account_type === 'seller' && $request->user()->seller?->is_active, 403, 'Votre boutique est suspendue. Contactez la plateforme.');
 
+        if (! $request->user()->hasVerifiedEmail()) return redirect()->route('verification.notice');
         return $next($request);
     }
 }

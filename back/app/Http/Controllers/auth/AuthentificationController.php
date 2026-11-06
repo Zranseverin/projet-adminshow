@@ -26,6 +26,7 @@ class AuthentificationController extends Controller
             $request->session()->regenerate();
 
             if (Auth::user()->account_type === 'seller') {
+                if (! Auth::user()->hasVerifiedEmail()) return redirect()->route('verification.notice');
                 return redirect()->route('seller.dashboard');
             }
 

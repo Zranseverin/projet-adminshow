@@ -45,7 +45,16 @@ class ProfileController extends Controller
         }
 
         unset($data['current_password']);
-        $user->update($data);
+        $emailChanged = $user->email !== $data['email'];
+        $user->fill($data);
+        if ($emailChanged && $user->account_type === 'seller') $user->email_verified_at = null;
+        $user->save();
+        if ($emailChanged && $user->account_type === 'seller') {
+            try { $user->sendEmailVerificationNotification(); } catch (\Throwable $exception) {
+                return redirect()->route('verification.notice')->withErrors(['mail' => 'Impossible d’envoyer le lien. Vous pouvez réessayer ci-dessous.']);
+            }
+            return redirect()->route('verification.notice');
+        }
 
         return redirect()->route('profile.show')->with('success', 'Votre profil a été mis à jour.');
     }

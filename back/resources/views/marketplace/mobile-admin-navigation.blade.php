@@ -9,6 +9,7 @@
             <a href="{{ route('marketplace.inventory') }}">Stocks</a>
             <a href="{{ route('marketplace.advertisements.index') }}">Publicités</a>
             <a href="{{ route('marketplace.settings') }}">Paramètres</a>
+            <a href="{{ route('admin.mail-settings.edit') }}">Configuration mail</a>
             <a href="{{ route('dashboard') }}">Tableau de bord</a>
             @endif
             <a href="{{ route('profile.show') }}">Mon profil</a>

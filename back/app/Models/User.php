@@ -11,8 +11,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements \Illuminate\Contracts\Auth\MustVerifyEmail
 {
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\VerifySellerEmail);
+    }
     public function seller()
     {
         return $this->hasOne(Seller::class);

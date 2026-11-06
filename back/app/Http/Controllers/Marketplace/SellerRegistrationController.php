@@ -36,6 +36,11 @@ class SellerRegistrationController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('seller.products.index');
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $exception) {
+            return redirect()->route('verification.notice')->withErrors(['mail' => 'Votre compte est créé, mais le mail n’a pas pu être envoyé. Réessayez avec le bouton ci-dessous.']);
+        }
+        return redirect()->route('verification.notice')->with('success', 'Un lien de validation a été envoyé à votre adresse e-mail.');
     }
 }

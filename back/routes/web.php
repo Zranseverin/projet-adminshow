@@ -28,6 +28,9 @@ Route::get('/dashboard', DashboardController::class)->middleware(['auth', Market
 Route::get('/login', [AuthentificationController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthentificationController::class, 'login'])->name('login.submit');
 Route::middleware('auth')->group(function (): void {
+    Route::get('/email/verify', [\App\Http\Controllers\SellerEmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\SellerEmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+    Route::post('/email/verification-notification', [\App\Http\Controllers\SellerEmailVerificationController::class, 'resend'])->middleware('throttle:3,1')->name('verification.send');
     Route::post('/logout', [AuthentificationController::class, 'logout'])->name('logout');
     Route::get('/profil', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profil/modifier', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -35,6 +38,8 @@ Route::middleware('auth')->group(function (): void {
 });
 
 Route::middleware(['auth', MarketplaceAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('mail-settings', [\App\Http\Controllers\MailConfigurationController::class, 'edit'])->name('mail-settings.edit');
+    Route::put('mail-settings', [\App\Http\Controllers\MailConfigurationController::class, 'update'])->name('mail-settings.update');
     Route::resource('authors', AuthorController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('books', BookController::class);

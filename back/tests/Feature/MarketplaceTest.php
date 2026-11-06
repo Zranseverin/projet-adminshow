@@ -61,9 +61,11 @@ class MarketplaceTest extends TestCase
 
     public function test_registration_does_not_grant_admin_and_seller_cannot_access_admin_pages(): void
     {
+        \Illuminate\Support\Facades\Notification::fake();
         $this->post('/devenir-vendeur', ['name' => 'Alice', 'shop_name' => 'Alice Boutique', 'email' => 'alice@example.com',
             'phone' => '0700000000', 'password' => 'password12345', 'password_confirmation' => 'password12345', 'account_type' => 'admin'])
-            ->assertRedirect(route('seller.products.index'));
+            ->assertRedirect(route('verification.notice'));
+        \Illuminate\Support\Facades\Notification::assertSentTo(User::where('email', 'alice@example.com')->firstOrFail(), \App\Notifications\VerifySellerEmail::class);
         $this->assertDatabaseHas('users', ['email' => 'alice@example.com', 'account_type' => 'seller']);
         $this->get('/admin/books')->assertForbidden();
         $this->get('/marketplace/settings')->assertForbidden();
