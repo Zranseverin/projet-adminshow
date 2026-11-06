@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="{{ asset('css/seller-shell.css') }}?v=1">
 @endif
 <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=1">
+@stack('styles')
 </head>
 <body @class(['seller-page' => $usesSellerShell])>
 @if($usesSellerShell)
