@@ -20,7 +20,7 @@
             <div class="brand-meta"><span>Votre boutique</span><span aria-hidden="true">•</span><span>Vos ambitions</span></div>
         </section>
         <section class="form-panel" aria-labelledby="register-title">
-            <form id="seller-registration" class="login-card" autocomplete="on" method="post" action="{{ route('seller.register.store') }}">
+            <form id="seller-registration" class="login-card" autocomplete="on" method="post" action="{{ route($googlePending ? 'seller.google.complete' : 'seller.register.store') }}">
                 @csrf
                 <div class="mobile-brand"><img src="{{ asset('zran-market.svg') }}" alt="">Zran Market</div>
                 <h2 id="register-title">Créer mon compte vendeur</h2>
@@ -28,6 +28,23 @@
                 @if($errors->any())
                     <div class="alert" role="alert"><strong>Vérifiez les informations saisies.</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
                 @endif
+                @if(!$googlePending)
+                    <a class="btn-login" href="{{ route('seller.google.redirect') }}" style="display:block;text-align:center;text-decoration:none;background:#fff;color:#243747;border:1px solid #d9e0e8;margin-bottom:18px">Continuer avec Google</a>
+                    @unless(config('services.google.client_id') && config('services.google.client_secret'))
+                        <p class="subtitle" role="status">La connexion Google sera disponible dès que les identifiants Google Cloud seront configurés.</p>
+                    @endunless
+                    <p class="subtitle" style="text-align:center;margin:-6px 0 16px">ou avec votre adresse e-mail</p>
+                @endif
+                @if($googlePending)
+                    <div class="alert" role="status">Compte Google confirmé pour {{ session('seller_google.email') }}. Indiquez le nom de votre boutique et votre téléphone pour terminer.</div>
+                        <div class="register-grid">
+                            <div class="field"><label for="name">Votre nom</label><input id="name" name="name" value="{{ old('name', session('seller_google.name')) }}" required autocomplete="name" maxlength="160"></div>
+                            <div class="field"><label for="shop_name">Nom de la boutique</label><input id="shop_name" name="shop_name" value="{{ old('shop_name') }}" required maxlength="160" autocomplete="organization"></div>
+                            <div class="field"><label for="phone">Téléphone professionnel</label><input id="phone" type="tel" name="phone" value="{{ old('phone') }}" required autocomplete="tel" maxlength="40"></div>
+                        </div>
+                        <p class="register-help">Votre adresse Google est vérifiée. Vous pourrez configurer vos instructions de paiement après la création de la boutique.</p>
+                        <button class="btn-login" type="submit">Créer ma boutique <span aria-hidden="true">→</span></button>
+                @else
                 <div class="register-grid">
                     <div class="field"><label for="name">Votre nom</label><input id="name" name="name" value="{{ old('name') }}" required autocomplete="name" autofocus @error('name') aria-invalid="true" aria-describedby="name-error" @enderror>@error('name')<span class="error" id="name-error">{{ $message }}</span>@enderror</div>
                     <div class="field"><label for="shop_name">Nom de la boutique</label><input id="shop_name" name="shop_name" value="{{ old('shop_name') }}" required maxlength="160" autocomplete="organization" @error('shop_name') aria-invalid="true" aria-describedby="shop-error" @enderror>@error('shop_name')<span class="error" id="shop-error">{{ $message }}</span>@enderror</div>
@@ -43,6 +60,7 @@
                 <p class="register-help">Après inscription, validez votre adresse e-mail grâce au lien reçu pour accéder à votre boutique. Vous pourrez ensuite compléter vos instructions de paiement.</p>
                 <button class="btn-login" type="submit">Créer ma boutique <span aria-hidden="true">→</span></button>
                 <p class="register-login">Déjà un compte ? <a class="link" href="{{ route('login') }}">Se connecter</a></p>
+                @endif
             </form>
         </section>
     </main>

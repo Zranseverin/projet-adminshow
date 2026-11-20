@@ -2,6 +2,11 @@
 
 return [
     'marketplace' => ['checkout_key' => env('MARKETPLACE_CHECKOUT_KEY')],
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL').'/devenir-vendeur/google/retour'),
+    ],
 
     /*
     |--------------------------------------------------------------------------

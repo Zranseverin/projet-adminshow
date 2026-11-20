@@ -55,6 +55,9 @@ Route::middleware(['auth', MarketplaceAdmin::class])->prefix('admin')->name('adm
 Route::middleware('guest')->group(function () {
     Route::get('/devenir-vendeur', [SellerRegistrationController::class, 'create'])->name('seller.register');
     Route::post('/devenir-vendeur', [SellerRegistrationController::class, 'store'])->middleware('throttle:5,1')->name('seller.register.store');
+    Route::get('/devenir-vendeur/google', [SellerRegistrationController::class, 'redirectToGoogle'])->name('seller.google.redirect');
+    Route::get('/devenir-vendeur/google/retour', [SellerRegistrationController::class, 'handleGoogleCallback'])->middleware('throttle:10,1')->name('seller.google.callback');
+    Route::post('/devenir-vendeur/google/terminer', [SellerRegistrationController::class, 'completeGoogleRegistration'])->middleware('throttle:5,1')->name('seller.google.complete');
 });
 Route::middleware(['auth', MarketplaceAdmin::class])->prefix('marketplace')->name('marketplace.')->group(function () {
     Route::resource('advertisements', \App\Http\Controllers\Marketplace\AdvertisingController::class)->except('show');
