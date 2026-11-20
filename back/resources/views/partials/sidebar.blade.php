@@ -31,6 +31,7 @@
         </a>
         @endforeach
         <a class="sb-item {{ request()->routeIs('admin.mail-settings.*') ? 'active' : '' }}" href="{{ route('admin.mail-settings.edit') }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg>Configuration mail</a>
+        <a class="sb-item {{ request()->routeIs('admin.google-settings.*') ? 'active' : '' }}" href="{{ route('admin.google-settings.edit') }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M20 12h-8v4h4a5 5 0 1 1-1.5-6.5"/></svg>Connexion Google</a>
         <div class="sb-section">Principal</div>
 
         <a class="sb-item {{ request()->routeIs('admin.books.*') ? 'active' : '' }}" href="{{ route('admin.books.index') }}">

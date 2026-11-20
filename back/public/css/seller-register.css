@@ -1,6 +1,7 @@
 .register-shell{width:min(100%,1160px);grid-template-columns:.85fr 1.3fr}
 .register-shell .brand-copy{margin:48px 0}
 .register-shell .login-card{width:100%;max-width:620px}
+.google-login{width:100%;min-height:46px;margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:11px;border:1px solid #d9e0e8;border-radius:var(--radius);background:#fff;color:#243747;font-size:14px;font-weight:650;text-decoration:none;transition:background .15s,border-color .15s,box-shadow .15s}.google-login:hover{border-color:#b8c4d1;background:#f9fafb;box-shadow:0 2px 8px rgba(36,55,71,.08);text-decoration:none}.google-login svg{width:20px;height:20px;flex:0 0 20px}
 .register-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}
 .register-grid .field{min-width:0}
 .register-grid .field input{padding:0 12px}

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Marketplace;
 
 use App\Http\Controllers\Controller;
+use App\Models\GoogleOAuthSetting;
 use App\Models\Seller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -15,14 +16,20 @@ class SellerRegistrationController extends Controller
 {
     public function create()
     {
-        return view('marketplace.register', ['googlePending' => (bool) session('seller_google')]);
+        $google = GoogleOAuthSetting::current();
+
+        return view('marketplace.register', [
+            'googlePending' => (bool) session('seller_google'),
+            'googleAvailable' => filled($google->client_id) && filled($google->client_secret),
+        ]);
     }
 
     public function redirectToGoogle()
     {
-        $clientId = config('services.google.client_id');
-        $redirect = config('services.google.redirect');
-        abort_unless(filled($clientId) && filled(config('services.google.client_secret')), 503,
+        $google = GoogleOAuthSetting::current();
+        $clientId = $google->client_id;
+        $redirect = filled($google->redirect_uri) ? $google->redirect_uri : route('seller.google.callback');
+        abort_unless(filled($clientId) && filled($google->client_secret), 503,
             'La création de compte Google n’est pas encore configurée.');
 
         $state = Str::random(40);
@@ -42,6 +49,8 @@ class SellerRegistrationController extends Controller
 
     public function handleGoogleCallback(Request $request)
     {
+        $google = GoogleOAuthSetting::current();
+        $redirect = filled($google->redirect_uri) ? $google->redirect_uri : route('seller.google.callback');
         $expectedState = (string) session('seller_google_oauth_state', '');
         abort_unless($request->filled('code') && $expectedState !== ''
             && hash_equals($expectedState, (string) $request->query('state')), 403,
@@ -50,9 +59,9 @@ class SellerRegistrationController extends Controller
 
         $tokenResponse = Http::asForm()->post('https://oauth2.googleapis.com/token', [
             'code' => $request->query('code'),
-            'client_id' => config('services.google.client_id'),
-            'client_secret' => config('services.google.client_secret'),
-            'redirect_uri' => config('services.google.redirect'),
+            'client_id' => $google->client_id,
+            'client_secret' => $google->client_secret,
+            'redirect_uri' => $redirect,
             'grant_type' => 'authorization_code',
         ]);
         abort_unless($tokenResponse->successful() && $tokenResponse->json('access_token'), 422,

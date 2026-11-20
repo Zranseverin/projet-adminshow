@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function (): void {
 });
 
 Route::middleware(['auth', MarketplaceAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('google-settings', [\App\Http\Controllers\Admin\GoogleOAuthSettingsController::class, 'edit'])->name('google-settings.edit');
+    Route::put('google-settings', [\App\Http\Controllers\Admin\GoogleOAuthSettingsController::class, 'update'])->name('google-settings.update');
     Route::get('mail-settings', [\App\Http\Controllers\MailConfigurationController::class, 'edit'])->name('mail-settings.edit');
     Route::put('mail-settings', [\App\Http\Controllers\MailConfigurationController::class, 'update'])->name('mail-settings.update');
     Route::resource('authors', AuthorController::class);
